@@ -1,16 +1,11 @@
-mport streamlit as st
-from frontend.config import API_URL
+import streamlit as st
 
-st.title("🩺 MediScope AI")
-text = st.text_area("Enter medical text:")
-language = st.selectbox("Choose Language", ["en", "fr"])
-
-if st.button("Analyze"):
-    with st.spinner("Processing..."):
-        res = st.session_state.requests.post(
-            f"{API_URL}/predict",
-            headers={"x-api-key": "12345"},
-            json={"text": text, "language": language}
-        ).json()
-        st.session_state.result = res
-        st.success("Done!")
+def show_home():
+    st.title("🏠 Welcome to MediScope-AI")
+    st.markdown("""
+        **MediScope-AI** is your AI-powered assistant for medical diagnosis support. 
+        Use the sidebar to explore the tools:
+        - 🖼️ Upload scans for image diagnosis
+        - 🎙️ Upload doctor voice notes
+        - 💬 Describe symptoms and get AI insights
+    """)
