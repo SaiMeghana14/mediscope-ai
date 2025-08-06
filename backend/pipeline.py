@@ -1,20 +1,17 @@
 from transformers import pipeline
-from .config import Config
+from backend.config import NER_MODEL, SUMMARIZATION_MODEL, TRANSLATION_MODEL
 
-image_classifier = pipeline("image-classification", model=Config.IMAGE_MODEL)
-text_generator = pipeline("text2text-generation", model=Config.TEXT_GEN_MODEL)
-translator = pipeline("translation_en_to_hi", model=Config.TRANSLATE_MODEL)
-speech_to_text = pipeline("automatic-speech-recognition", model=Config.AUDIO_MODEL)
+def process_text(text, language):
+    ner = pipeline("ner", model=NER_MODEL, grouped_entities=True)
+    summary = pipeline("summarization", model=SUMMARIZATION_MODEL)
+    translate = pipeline("translation_en_to_fr", model=TRANSLATION_MODEL)
 
-def classify_image(image):
-    return image_classifier(image)
+    entities = ner(text)
+    summary_text = summary(text, max_length=60, min_length=10, do_sample=False)[0]['summary_text']
+    translation = translate(text)[0]['translation_text']
 
-def generate_summary(symptoms):
-    prompt = f"Summarize and suggest possible conditions for: {symptoms}"
-    return text_generator(prompt, max_length=100, clean_up_tokenization_spaces=True)[0]['generated_text']
-
-def translate_to_local(text):
-    return translator(text)[0]['translation_text']
-
-def transcribe_audio(audio_file):
-    return speech_to_text(audio_file)['text']
+    return {
+        "entities": entities,
+        "summary": summary_text,
+        "translation": translation
+    }
