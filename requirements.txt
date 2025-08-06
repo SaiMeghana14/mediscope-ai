@@ -1,5 +1,10 @@
-streamlit
+fastapi
+uvicorn
 transformers
-torch
-sentencepiece
-PyMuPDF
+pydantic
+python-multipart
+pillow
+streamlit
+requests
+aiofiles
+python-dotenv
