@@ -1,11 +1,10 @@
-API_SETTINGS = {
-    "host": "127.0.0.1",
-    "port": 8000
-}
+import os
+from dotenv import load_dotenv
 
-MODEL_NAMES = {
-    "summarizer": "facebook/bart-large-cnn",
-    "qa_model": "deepset/roberta-base-squad2"
-}
+load_dotenv()
 
-UPLOAD_FOLDER = "uploads"
+class Config:
+    IMAGE_MODEL = "microsoft/resnet-50"
+    TEXT_GEN_MODEL = "google/flan-t5-base"
+    TRANSLATE_MODEL = "Helsinki-NLP/opus-mt-en-hi"  # English to Hindi
+    AUDIO_MODEL = "openai/whisper-base"
