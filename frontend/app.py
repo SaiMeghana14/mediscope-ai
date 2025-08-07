@@ -1,9 +1,9 @@
 import streamlit as st
-from frontend.Home import show_home
-from frontend.Results import show_results
-from frontend.Feedback import show_feedback
-from frontend.History import show_history
-from frontend.LanguageSelector import language_selector
+from Home import show_home
+from Results import show_results
+from Feedback import show_feedback
+from History import show_history
+from LanguageSelector import language_selector
 
 st.set_page_config(page_title="Mediscope-AI", layout="wide")
 
