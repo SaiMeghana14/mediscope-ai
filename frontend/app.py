@@ -3,7 +3,7 @@ from Home import show_home
 from Results import show_results
 from Feedback import show_feedback
 from History import show_history
-from LanguageSelector import language_selector
+from LanguageSelector import select_language
 
 st.set_page_config(page_title="Mediscope-AI", layout="wide")
 
