@@ -11,11 +11,6 @@ from fpdf import FPDF
 import tempfile
 import os
 
-try:
-    st.set_option('deprecation.showPyplotGlobalUse', False)
-except st.StreamlitAPIException:
-    pass  # Config option not available in newer Streamlit versions
-
 # -------------------------------
 # Login check (dummy session example)
 if not st.session_state.get("logged_in", False):
