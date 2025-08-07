@@ -10,3 +10,8 @@ requests
 aiofiles
 python-dotenv
 fpdf
+googletrans==4.0.0-rc1
+gTTS
+SpeechRecognition
+pyaudio
+pandas
