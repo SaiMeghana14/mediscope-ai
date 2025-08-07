@@ -5,6 +5,10 @@ from Feedback import show_feedback
 from History import show_history
 from LanguageSelector import select_language
 from Chatbot import show_chatbot
+from database import init_db  # ✅ Import init_db
+
+# ✅ Initialize the database
+init_db()
 
 st.set_page_config(page_title="Mediscope-AI", layout="wide", page_icon="🧬")
 
