@@ -31,6 +31,11 @@ def set_result_style():
         """, unsafe_allow_html=True
     )
 
+if mode == "Doctor":
+    show_probabilities(prob_dict)
+else:
+    st.write(get_summary(top_class, top_prob))
+
 # Function to generate PDF report
 def generate_pdf(result_text, summary):
     pdf = FPDF()
