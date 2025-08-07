@@ -1,18 +1,8 @@
-fastapi
-uvicorn
-transformers
-pydantic
-python-multipart
-pillow
 streamlit
-matplotlib
-requests
-aiofiles
-python-dotenv
-fpdf
-googletrans==4.0.0-rc1
-gTTS
-SpeechRecognition
-pyaudio
 pandas
+matplotlib
 seaborn
+pyttsx3
+transformers
+fpdf
+torch  # Required by transformers
