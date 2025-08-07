@@ -27,3 +27,8 @@ with col2:
         <p>Just upload your X-ray and get instant feedback.</p>
     </div>
     """, unsafe_allow_html=True)
+
+if st.button("Run Test Case"):
+    st.session_state["image_path"] = "frontend/assets/sample_xray.jpg"
+    st.session_state["auto_test"] = True
+    st.experimental_rerun()
