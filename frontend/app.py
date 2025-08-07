@@ -18,8 +18,8 @@ PAGES = {
     "History": show_history
 }
 
-choice = st.sidebar.selectbox("Navigate", list(PAGES.keys()))
-PAGES[choice]()
+selected_page = st.sidebar.radio("Navigate", list(PAGES.keys()))
+PAGES[selected_page]()
 
 translated_title = translate_text("Mediscope AI – Your Health Assistant", target_lang)
 st.title(translated_title)
