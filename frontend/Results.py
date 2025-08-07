@@ -2,6 +2,9 @@ import streamlit as st
 import requests
 from fpdf import FPDF
 import base64
+import matplotlib.pyplot as plt
+from PIL import Image
+import io
 
 BACKEND = "http://localhost:8000"
 
@@ -48,3 +51,31 @@ def show_results():
                 b64 = base64.b64encode(f.read()).decode()
                 href = f'<a href="data:application/octet-stream;base64,{b64}" download="Patient_Report.pdf">📄 Download Report</a>'
                 st.markdown(href, unsafe_allow_html=True)
+
+
+def create_pdf(result_summary, probability_dict, image_path):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=14)
+    
+    pdf.cell(200, 10, txt="Mediscope-AI Diagnostic Report", ln=True, align='C')
+    pdf.image("frontend/assets/logo.png", x=10, y=20, w=40)
+
+    pdf.ln(30)
+    pdf.multi_cell(0, 10, result_summary)
+
+    # Plot probabilities
+    fig, ax = plt.subplots()
+    labels = list(probability_dict.keys())
+    values = list(probability_dict.values())
+    ax.barh(labels, values)
+    ax.set_xlabel("Probability")
+    ax.set_xlim(0, 1.0)
+
+    img_bytes = io.BytesIO()
+    plt.savefig(img_bytes, format='png')
+    img_bytes.seek(0)
+    pdf.image(img_bytes, x=10, y=pdf.get_y(), w=180)
+
+    # Final Save
+    pdf.output("report.pdf")
