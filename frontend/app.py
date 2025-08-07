@@ -5,6 +5,9 @@ from frontend.Feedback import show_feedback
 from frontend.History import show_history
 from frontend.LanguageSelector import language_selector
 
+with open("frontend/styles.css") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
 st.set_page_config(page_title="Mediscope-AI", layout="wide")
 
 PAGES = {
