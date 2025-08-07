@@ -4,14 +4,17 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pyttsx3
 from transformers import pipeline
+from fpdf import FPDF
+import base64
+import tempfile
 
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
-# Text summarizer and narrator
+# Initialize summarizer and narrator
 summarizer = pipeline("summarization")
 narrator = pyttsx3.init()
 
-# Sample health results data
+# Mock health data
 def get_mock_data():
     return pd.DataFrame({
         'Metric': ['Heart Rate', 'Blood Pressure (Systolic)', 'Blood Pressure (Diastolic)', 'SpO2', 'Temperature'],
@@ -19,7 +22,7 @@ def get_mock_data():
         'Normal Range': ['60-100 bpm', '90-120 mmHg', '60-80 mmHg', '95-100%', '97-99°F']
     })
 
-# Dynamic Health Tips based on symptoms
+# Dynamic health tips
 def get_health_tips(symptoms):
     tips = {
         "Fever": "Stay hydrated and rest well.",
@@ -59,64 +62,70 @@ def suggest_articles(symptoms):
     links = [f"- [{symptom} Guide]({articles.get(symptom, 'https://www.webmd.com/')})" for symptom in symptoms]
     return "\n".join(links)
     
-# Generate health summary
-def generate_summary(df):
-    summary = "Here is your health report:\n"
-    for _, row in df.iterrows():
-        summary += f"{row['Metric']} is {row['Value']}, normal range is {row['Normal Range']}.\n"
-    return summary
+# Generate PDF of results
+def generate_pdf(df):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt="Health Results Summary", ln=True, align='C')
 
-# Visualizations
-def display_charts(df):
-    st.subheader("📊 Health Metrics - Bar Chart")
-    plt.figure(figsize=(8, 4))
-    plt.bar(df['Metric'], df['Value'], color='skyblue')
-    plt.xlabel('Metric')
-    plt.ylabel('Value')
-    plt.xticks(rotation=30)
-    st.pyplot()
+    for i in range(len(df)):
+        row = df.iloc[i]
+        pdf.cell(200, 10, txt=f"{row['Metric']}: {row['Value']} ({row['Normal Range']})", ln=True)
 
-    st.subheader("🌀 Health Metrics - Pie Chart")
-    plt.figure(figsize=(5, 5))
-    plt.pie(df['Value'], labels=df['Metric'], autopct='%1.1f%%', startangle=140)
-    plt.axis('equal')
-    st.pyplot()
+    pdf.output("/tmp/health_report.pdf")
+    return "/tmp/health_report.pdf"
 
-    st.subheader("📈 Health Metrics - Line Chart")
-    plt.figure(figsize=(8, 4))
-    plt.plot(df['Metric'], df['Value'], marker='o')
-    plt.grid(True)
-    plt.ylabel("Value")
-    st.pyplot()
+# Download PDF helper
+def download_pdf_button(filepath):
+    with open(filepath, "rb") as f:
+        base64_pdf = base64.b64encode(f.read()).decode('utf-8')
+    href = f'<a href="data:application/pdf;base64,{base64_pdf}" download="health_report.pdf">📄 Download Health Report PDF</a>'
+    st.markdown(href, unsafe_allow_html=True)
 
-    st.subheader("🌡️ Heatmap")
-    pivot = df.pivot_table(index="Metric", values="Value")
-    plt.figure(figsize=(6, 3))
-    sns.heatmap(pivot, annot=True, cmap="YlGnBu", linewidths=0.5)
+# Summarize and speak results
+def narrate_summary(text):
+    summary = summarizer(text, max_length=60, min_length=20, do_sample=False)[0]['summary_text']
+    st.subheader("📢 Summary:")
+    st.info(summary)
+    narrator.say(summary)
+    narrator.runAndWait()
+
+# Display Heatmap
+def show_heatmap(df):
+    st.subheader("📊 Health Metric Heatmap")
+    df_heatmap = df[['Metric', 'Value']].set_index('Metric')
+    sns.heatmap(df_heatmap, annot=True, cmap='YlOrRd', linewidths=1)
     st.pyplot()
 
 # Main function
 def show_results():
-    st.title("🩺 Health Analysis Results")
-    df = get_mock_data()
+    st.title("🧪 Health Analysis Results")
 
-    st.subheader("📋 Health Metrics")
+    df = get_mock_data()
     st.dataframe(df, use_container_width=True)
 
-    display_charts(df)
+    show_heatmap(df)
 
-    st.subheader("📝 Health Summary")
-    summary = generate_summary(df)
-    summarized = summarizer(summary, max_length=100, min_length=30, do_sample=False)[0]['summary_text']
-    st.success(summarized)
+    # Narrate and summarize
+    text_block = " ".join([f"{row['Metric']} is {row['Value']} which should be in {row['Normal Range']}." for _, row in df.iterrows()])
+    narrate_summary(text_block)
 
-    if st.button("🔊 Narrate Summary"):
-        narrator.say(summarized)
-        narrator.runAndWait()
+    # Export as PDF
+    st.subheader("📄 Export Report")
+    pdf_path = generate_pdf(df)
+    download_pdf_button(pdf_path)
 
-    st.subheader("💡 Suggested Health Tips")
-    symptoms = st.multiselect("Select symptoms you're experiencing:", ["Fever", "Cough", "Fatigue", "Headache", "Cold"])
-    if symptoms:
-        tips = get_health_tips(symptoms)
-        for tip in tips:
-            st.info(tip)
+    # In-app PDF preview
+    with open(pdf_path, "rb") as file:
+        base64_pdf = base64.b64encode(file.read()).decode('utf-8')
+        pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="500px" type="application/pdf"></iframe>'
+        st.markdown("### 📑 Preview Report")
+        st.markdown(pdf_display, unsafe_allow_html=True)
+
+    # Health tips
+    st.subheader("💡 Personalized Health Tips")
+    selected_symptoms = st.multiselect("Select any symptoms you’re experiencing:", ["Fever", "Cough", "Fatigue", "Headache", "Cold"])
+    if selected_symptoms:
+        for tip in get_health_tips(selected_symptoms):
+            st.success(tip)
