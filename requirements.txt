@@ -4,5 +4,7 @@ matplotlib
 seaborn
 pyttsx3
 transformers
+speechrecognition
 fpdf
-torch  # Required by transformers
+torch
+scipy
