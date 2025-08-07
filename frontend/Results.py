@@ -1,139 +1,149 @@
-# Sidebar toggles
-st.sidebar.header("🛠️ Visualization Options")
-show_heatmap = st.sidebar.checkbox("Show Heatmap Overlay")
-show_bar_chart = st.sidebar.checkbox("Show Prediction Confidence Chart")
-show_ai_summary = st.sidebar.checkbox("Show AI Summary")
+# frontend/Results.py
 
 import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 from fpdf import FPDF
+import pyttsx3  # For voice narration
 import base64
-import datetime
 import os
 
-# Enhanced styles for results
-def set_result_style():
-    st.markdown(
-        """
-        <style>
-        .result-card {
-            background-color: #f0f2f6;
-            padding: 1.5rem;
-            border-radius: 15px;
-            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.05);
-            margin-bottom: 1rem;
-        }
-        .result-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #003366;
-        }
-        .result-text {
-            font-size: 16px;
-            line-height: 1.6;
-            color: #333333;
-        }
-        </style>
-        """, unsafe_allow_html=True
-    )
+# Optional: For AI summarization
+from transformers import pipeline
 
-# Function to generate PDF report
-def generate_pdf(result_text, summary):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
+# Load futuristic styles
+st.markdown('<link rel="stylesheet" href="styles.css">', unsafe_allow_html=True)
 
-    pdf.multi_cell(0, 10, f"MEDISCOPE AI REPORT\n\nDate: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
-    pdf.multi_cell(0, 10, "Full Result:")
-    pdf.multi_cell(0, 10, result_text)
-    pdf.ln()
-    pdf.multi_cell(0, 10, "AI Summary:")
-    pdf.multi_cell(0, 10, summary)
+# AI summarizer
+summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
 
-    file_path = "/mnt/data/MediScope_Report.pdf"
-    pdf.output(file_path)
-    return file_path
+def speak(text):
+    engine = pyttsx3.init()
+    engine.say(text)
+    engine.runAndWait()
 
-def download_button(file_path, label):
-    with open(file_path, "rb") as f:
-        base64_pdf = base64.b64encode(f.read()).decode("utf-8")
-    href = f'<a href="data:application/pdf;base64,{base64_pdf}" download="MediScope_Report.pdf">{label}</a>'
-    st.markdown(href, unsafe_allow_html=True)
+# New: Dynamic Health Tips based on symptoms
+def get_health_tips(symptoms):
+    tips = {
+        "Fever": "Stay hydrated and rest well.",
+        "Cough": "Use a humidifier and avoid cold drinks.",
+        "Fatigue": "Maintain a healthy diet and sleep cycle.",
+        "Headache": "Reduce screen time and stay hydrated.",
+        "Cold": "Drink warm fluids and avoid allergens."
+    }
+    return [tips.get(symptom, "Consult a doctor for personalized advice.") for symptom in symptoms]
+
+# New: Recommend doctor/specialist
+def recommend_doctor(df):
+    if df['Severity'].max() >= 4:
+        return "🔴 Critical severity detected. Please consult a General Physician or Specialist immediately."
+    elif df['Severity'].max() >= 2:
+        return "🟠 Moderate symptoms. Monitor closely and consult if conditions worsen."
+    else:
+        return "🟢 Symptoms appear mild. Home care is advised."
+
+# New: Add emoji indicator based on severity
+def severity_to_emoji(severity):
+    if severity >= 4:
+        return "🔴"
+    elif severity >= 2:
+        return "🟠"
+    else:
+        return "🟢"
+
+# New: Suggested articles (demo static list)
+def suggest_articles(symptoms):
+    articles = {
+        "Fever": "https://www.healthline.com/health/fever",
+        "Cough": "https://www.webmd.com/cold-and-flu/coughs-causes-and-treatments",
+        "Fatigue": "https://www.medicalnewstoday.com/articles/why-am-i-so-tired",
+        "Headache": "https://www.nhs.uk/conditions/headaches/"
+    }
+    links = [f"- [{symptom} Guide]({articles.get(symptom, 'https://www.webmd.com/')})" for symptom in symptoms]
+    return "\n".join(links)
 
 def show_results():
-    set_result_style()
+    st.title("🧠 Mediscope AI: Results Dashboard")
 
-    st.markdown("<div class='result-card'>", unsafe_allow_html=True)
+    # Sample: Use session_state or dummy data for now
+    if 'results' in st.session_state:
+        df = st.session_state['results']
+    else:
+        # Fallback demo data
+        df = pd.DataFrame({
+            'Symptom': ['Fever', 'Cough', 'Fatigue', 'Headache'],
+            'Severity': [3, 2, 4, 1],
+            'Probability (%)': [80, 65, 90, 45]
+        })
 
-    st.markdown("<h3 class='result-title'>Diagnosis Results</h3>", unsafe_allow_html=True)
+    # Add emoji indicators
+    df['Indicator'] = df['Severity'].apply(severity_to_emoji)
 
-    result_text = st.session_state.get("full_result", "No diagnosis result available.")
-    st.markdown(f"<p class='result-text'>{result_text}</p>", unsafe_allow_html=True)
+    # Display table
+    st.subheader("📝 Diagnosis Results")
+    st.dataframe(df, use_container_width=True)
 
-    summary = st.session_state.get("summary", "No AI summary available.")
-    st.markdown("<hr>")
-    st.markdown("<h4 class='result-title'>AI Summary</h4>", unsafe_allow_html=True)
-    st.markdown(f"<p class='result-text'>{summary}</p>", unsafe_allow_html=True)
+    # AI Summary
+    st.subheader("📌 AI Summary")
+    summary_text = summarizer(df.to_csv(index=False), max_length=50, min_length=25, do_sample=False)[0]['summary_text']
+    st.success(summary_text)
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    if st.button("🔊 Narrate Summary"):
+        speak(summary_text)
 
-    st.markdown("### 📄 Download Report")
-    file_path = generate_pdf(result_text, summary)
-    download_button(file_path, "⬇️ Click here to download the PDF report")
+    st.subheader("📊 Visual Insights")
 
-    st.success("You can now share your results or download the full report!")
+    col1, col2 = st.columns(2)
 
+    with col1:
+        st.markdown("#### 🔺 Symptom Severity Chart")
+        fig, ax = plt.subplots()
+        sns.barplot(x='Severity', y='Symptom', data=df, palette='coolwarm', ax=ax)
+        st.pyplot(fig)
 
-# --- Enhancements: Heatmap, Graphs, AI Summary, UI ---
+    with col2:
+        st.markdown("#### 🌡️ Probability Heatmap")
+        heat_df = df.pivot_table(index='Symptom', values='Probability (%)')
+        fig2, ax2 = plt.subplots()
+        sns.heatmap(heat_df, annot=True, cmap='YlGnBu', ax=ax2)
+        st.pyplot(fig2)
 
-import seaborn as sns
-import matplotlib.pyplot as plt
-import openai  # Requires OPENAI_API_KEY set in .env or secrets
-from io import BytesIO
-import base64
+    # New: Doctor recommendation section
+    st.subheader("👨‍⚕️ Doctor Recommendation")
+    st.info(recommend_doctor(df))
 
-# Function to generate a heatmap of results (dummy data used for illustration)
-def display_heatmap(data, title="Symptom Intensity Heatmap"):
-    st.markdown("### 🔥 Symptom Heatmap")
-    fig, ax = plt.subplots()
-    sns.heatmap(data, annot=True, fmt=".1f", cmap="YlOrRd", cbar=True, ax=ax)
-    st.pyplot(fig)
+    # New: Personalized Health Tips
+    st.subheader("💡 Health Tips")
+    tips = get_health_tips(df['Symptom'].tolist())
+    for tip in tips:
+        st.write("•", tip)
 
-# Function to display a bar chart (e.g., confidence levels for predictions)
-def display_bar_chart(labels, confidences, title="Prediction Confidence Levels"):
-    st.markdown("### 📊 Prediction Confidence")
-    fig, ax = plt.subplots()
-    ax.barh(labels, confidences, color='skyblue')
-    ax.set_xlabel('Confidence (%)')
-    st.pyplot(fig)
+    # New: Suggested Readings
+    st.subheader("📚 Suggested Articles")
+    st.markdown(suggest_articles(df['Symptom'].tolist()))
 
-# Function to summarize results using OpenAI GPT (set your API key securely)
-def generate_summary(user_input):
-    openai.api_key = st.secrets.get("OPENAI_API_KEY", "")
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": f"Summarize the following medical test results:
-{user_input}"}]
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        return f"⚠️ Error generating summary: {e}"
+    # PDF Report Generator
+    st.subheader("📄 Download PDF Report")
 
-# Sample usage inside show_results (insert these in your logic where data is ready)
-# Example heatmap
-# import numpy as np
-# sample_data = np.random.rand(5, 5)
-# display_heatmap(sample_data)
+    if st.button("📥 Generate Report"):
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+        pdf.cell(200, 10, txt="Mediscope AI Report", ln=True, align='C')
+        pdf.ln(10)
 
-# Example bar chart
-# display_bar_chart(["Disease A", "Disease B"], [70, 30])
+        for index, row in df.iterrows():
+            pdf.cell(200, 10, txt=f"{row['Indicator']} {row['Symptom']} - Severity: {row['Severity']}, Probability: {row['Probability (%)']}%", ln=True)
 
-# Example AI summary
-# summary_text = generate_summary("User has symptoms A, B, C with high intensity.")
-# st.markdown("### 🧠 AI Summary")
-# st.info(summary_text)
+        pdf.ln(5)
+        pdf.set_font("Arial", 'B', 12)
+        pdf.cell(200, 10, txt="Doctor Recommendation:", ln=True)
+        pdf.set_font("Arial", size=12)
+        pdf.multi_cell(0, 10, recommend_doctor(df))
 
-if mode == "Doctor":
-    show_probabilities(prob_dict)
-else:
-    st.write(get_summary(top_class, top_prob))
+        pdf.output("report.pdf")
+        with open("report.pdf", "rb") as f:
+            base64_pdf = base64.b64encode(f.read()).decode('utf-8')
+            href = f'<a href="data:application/pdf;base64,{base64_pdf}" download="Mediscope_Report.pdf">📤 Download PDF</a>'
+            st.markdown(href, unsafe_allow_html=True)
