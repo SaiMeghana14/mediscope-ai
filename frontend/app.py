@@ -10,6 +10,12 @@ from database import init_db  # ✅ Import init_db
 # ✅ Initialize the database
 init_db()
 
+def apply_custom_css():
+    with open("frontend/styles.css") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+apply_custom_css()
+
 st.set_page_config(page_title="Mediscope-AI", layout="wide", page_icon="🧬")
 
 # Language Selector
