@@ -20,3 +20,6 @@ PAGES = {
 
 choice = st.sidebar.selectbox("Navigate", list(PAGES.keys()))
 PAGES[choice]()
+
+translated_title = translate_text("Mediscope AI – Your Health Assistant", target_lang)
+st.title(translated_title)
