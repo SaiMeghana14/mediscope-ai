@@ -1,62 +1,88 @@
 import streamlit as st
-from openai import OpenAIError
 import openai
+from openai import OpenAIError
+from gtts import gTTS
+from io import BytesIO
+from streamlit_mic_recorder import mic_recorder
+import tempfile
 
-# Load your OpenAI API key from secrets
+# Load OpenAI API key securely
 openai.api_key = st.secrets.get("openai_api_key", "")
 
-# Set up the futuristic chat UI
+# Page layout
 def show_chatbot():
     st.markdown("<h2 style='color:#00f4c1;'>🧠 AI Diagnosis Assistant</h2>", unsafe_allow_html=True)
-    st.markdown("Ask me to explain any medical term, test result, or condition from your report.")
+    st.markdown("💬 Ask me about any medical term, test result, or health condition from your report.")
     st.divider()
 
-    # Initialize chat history
+    # Session state for chat
     if "messages" not in st.session_state:
         st.session_state.messages = [
-            {"role": "assistant", "content": "Hello 👋 I'm your AI medical assistant. Ask me anything from your results."}
+            {"role": "assistant", "content": "👋 Hello! I'm your AI medical assistant. Ask me anything related to your test results or medical terms."}
         ]
 
-    # Display messages
+    # Display existing conversation
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    # Get user input
-    if user_input := st.chat_input("Type your question here..."):
-        # Append user message
+    # 🟣 Voice Input
+    st.markdown("🎙️ Speak your query or type below:")
+    audio = mic_recorder(start_prompt="🎤 Start Recording", stop_prompt="🛑 Stop", just_once=True, key="voice")
+
+    user_input = ""
+
+    # Transcribe voice if recorded
+    if audio and "bytes" in audio:
+        try:
+            transcript = openai.Audio.transcribe("whisper-1", audio["bytes"])
+            user_input = transcript["text"]
+            st.success(f"🎧 You said: {user_input}")
+        except Exception as e:
+            st.error("Voice transcription failed.")
+
+    # Fallback to text input
+    user_input = st.chat_input("Type your medical question here...") or user_input
+
+    if user_input:
         st.session_state.messages.append({"role": "user", "content": user_input})
         with st.chat_message("user"):
             st.markdown(user_input)
 
-        # Generate assistant reply using OpenAI
+        # AI response generation
         try:
             with st.chat_message("assistant"):
-                with st.spinner("Analyzing..."):
+                with st.spinner("🧠 Thinking..."):
                     response = openai.ChatCompletion.create(
                         model="gpt-4",
                         messages=st.session_state.messages,
                         temperature=0.5,
-                        max_tokens=500
+                        max_tokens=600
                     )
-                    reply = response.choices[0].message.content
+                    reply = response.choices[0].message.content.strip()
                     st.markdown(reply)
 
-            # Append assistant message
+                    # 🟢 Text-to-Speech (TTS)
+                    tts = gTTS(text=reply, lang="en")
+                    tts_audio = BytesIO()
+                    tts.write_to_fp(tts_audio)
+                    st.audio(tts_audio.getvalue(), format="audio/mp3")
+
+            # Save assistant message
             st.session_state.messages.append({"role": "assistant", "content": reply})
 
         except OpenAIError as e:
-            st.error(f"OpenAI API error: {e}")
+            st.error("⚠️ OpenAI API error: Please try again later.")
             st.session_state.messages.append({
                 "role": "assistant",
                 "content": "⚠️ Sorry, I couldn't respond due to a technical error."
             })
 
-    # Option to clear chat
+    # Sidebar - Reset
     with st.sidebar:
-        if st.button("🔄 Reset Assistant"):
+        st.markdown("### 💬 Assistant Settings")
+        if st.button("🔄 Reset Chat"):
             st.session_state.messages = [
                 {"role": "assistant", "content": "Hi again! Ask me about your medical results anytime."}
             ]
             st.success("Assistant reset!")
-
