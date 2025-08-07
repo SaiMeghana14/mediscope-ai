@@ -1,48 +1,51 @@
 /* frontend/styles.css */
 
-/* Main App Styling */
 body {
-    background-color: #ffffff;
-    font-family: 'Segoe UI', sans-serif;
-    color: #333333;
+    background-color: #0e101c;
+    color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Sidebar */
-.sidebar .sidebar-content {
-    background-color: #f7f7f7;
-    padding: 20px;
+.block-container {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-top: 1rem;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
-/* Headers */
 h1, h2, h3 {
-    color: #4CAF50;
+    color: #7df9ff;
 }
 
-/* Buttons */
-.stButton > button {
-    background-color: #4CAF50;
-    color: white;
-    border-radius: 10px;
-    padding: 0.5rem 1rem;
-    font-size: 16px;
+.sidebar .sidebar-content {
+    background-color: #1f1f2e;
+    border-right: 1px solid #444;
 }
 
-/* Tables */
-table {
-    border-collapse: collapse;
-    width: 100%;
+button:hover {
+    background-color: #7df9ff !important;
+    color: #000 !important;
 }
 
-th, td {
-    border: 1px solid #dddddd;
-    padding: 8px;
-    text-align: left;
+.st-bb, .st-eb {
+    border: none;
 }
 
-/* Footer */
-footer {
-    text-align: center;
-    color: #666;
-    padding: 20px 0;
-    font-size: 0.9em;
+a {
+    color: #00ffd5;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
+
+html, body, .reportview-container {
+    font-family: 'Orbitron', sans-serif;
 }
