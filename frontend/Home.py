@@ -1,6 +1,5 @@
 import streamlit as st
 from PIL import Image
-from frontend.styles import section_title
 
 def show_home():
     st.markdown("""
