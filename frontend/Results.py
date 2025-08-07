@@ -1,3 +1,8 @@
+# Sidebar toggles
+st.sidebar.header("🛠️ Visualization Options")
+show_heatmap = st.sidebar.checkbox("Show Heatmap Overlay")
+show_bar_chart = st.sidebar.checkbox("Show Prediction Confidence Chart")
+show_ai_summary = st.sidebar.checkbox("Show AI Summary")
 
 import streamlit as st
 from fpdf import FPDF
@@ -30,11 +35,6 @@ def set_result_style():
         </style>
         """, unsafe_allow_html=True
     )
-
-if mode == "Doctor":
-    show_probabilities(prob_dict)
-else:
-    st.write(get_summary(top_class, top_prob))
 
 # Function to generate PDF report
 def generate_pdf(result_text, summary):
@@ -82,3 +82,58 @@ def show_results():
 
     st.success("You can now share your results or download the full report!")
 
+
+# --- Enhancements: Heatmap, Graphs, AI Summary, UI ---
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+import openai  # Requires OPENAI_API_KEY set in .env or secrets
+from io import BytesIO
+import base64
+
+# Function to generate a heatmap of results (dummy data used for illustration)
+def display_heatmap(data, title="Symptom Intensity Heatmap"):
+    st.markdown("### 🔥 Symptom Heatmap")
+    fig, ax = plt.subplots()
+    sns.heatmap(data, annot=True, fmt=".1f", cmap="YlOrRd", cbar=True, ax=ax)
+    st.pyplot(fig)
+
+# Function to display a bar chart (e.g., confidence levels for predictions)
+def display_bar_chart(labels, confidences, title="Prediction Confidence Levels"):
+    st.markdown("### 📊 Prediction Confidence")
+    fig, ax = plt.subplots()
+    ax.barh(labels, confidences, color='skyblue')
+    ax.set_xlabel('Confidence (%)')
+    st.pyplot(fig)
+
+# Function to summarize results using OpenAI GPT (set your API key securely)
+def generate_summary(user_input):
+    openai.api_key = st.secrets.get("OPENAI_API_KEY", "")
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": f"Summarize the following medical test results:
+{user_input}"}]
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        return f"⚠️ Error generating summary: {e}"
+
+# Sample usage inside show_results (insert these in your logic where data is ready)
+# Example heatmap
+# import numpy as np
+# sample_data = np.random.rand(5, 5)
+# display_heatmap(sample_data)
+
+# Example bar chart
+# display_bar_chart(["Disease A", "Disease B"], [70, 30])
+
+# Example AI summary
+# summary_text = generate_summary("User has symptoms A, B, C with high intensity.")
+# st.markdown("### 🧠 AI Summary")
+# st.info(summary_text)
+
+if mode == "Doctor":
+    show_probabilities(prob_dict)
+else:
+    st.write(get_summary(top_class, top_prob))
