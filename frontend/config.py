@@ -41,10 +41,8 @@ UPLOAD_TYPES = ["pdf", "png", "jpg", "jpeg"]
 MAX_FILE_SIZE_MB = 10
 
 # Footer
-FOOTER_TEXT = f"© 2025 {AUTHOR} • Made with ❤️ for better health"
+FOOTER_TEXT = f"© 2025 {K.N.V Sai Meghana} • Made with ❤️ for better health"
 
-# CSS path (used if you want to load dynamically)
-CSS_FILE = "frontend/styles.css"
 
 
 
