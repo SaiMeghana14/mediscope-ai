@@ -1,4 +1,8 @@
-# frontend/config.py
+import streamlit as st
+
+def apply_custom_styles():
+    with open("frontend/styles.css") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 APP_TITLE = "Mediscope-AI"
 APP_SUBTITLE = "Your AI-Powered Medical Report Analyzer"
