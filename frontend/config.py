@@ -3,10 +3,20 @@
 APP_TITLE = "Mediscope-AI"
 APP_SUBTITLE = "Your AI-Powered Medical Report Analyzer"
 
-# Color theme
-PRIMARY_COLOR = "#4CAF50"
-SECONDARY_COLOR = "#f0f0f0"
-TEXT_COLOR = "#333333"
+# Color themes and icons
+colors = {
+    "primary": "#7df9ff",
+    "secondary": "#1f1f2e",
+    "text": "#ffffff",
+    "accent": "#00ffd5"
+}
+
+icons = {
+    "Home": "🏠",
+    "Results": "🧪",
+    "Feedback": "🗣️",
+    "History": "📜"
+}
 
 # Sidebar config
 SIDEBAR_TITLE = "Navigation"
@@ -31,4 +41,6 @@ FOOTER_TEXT = f"© 2025 {AUTHOR} • Made with ❤️ for better health"
 
 # CSS path (used if you want to load dynamically)
 CSS_FILE = "frontend/styles.css"
+
+
 
