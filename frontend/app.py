@@ -8,6 +8,9 @@ from Chatbot import show_chatbot
 
 st.set_page_config(page_title="Mediscope-AI", layout="wide", page_icon="🧬")
 
+# Language Selector
+select_language()
+
 with open("frontend/styles.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
     
