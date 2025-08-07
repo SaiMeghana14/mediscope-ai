@@ -2,19 +2,30 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import json
+import sqlite3
 import pyttsx3
+import speech_recognition as sr
 from transformers import pipeline
 from fpdf import FPDF
-import base64
 import tempfile
+import os
 
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
-# Initialize summarizer and narrator
+# -------------------------------
+# Login check (dummy session example)
+if not st.session_state.get("logged_in", False):
+    st.warning("Please log in to view results.")
+    st.stop()
+
+# -------------------------------
+# Text summarizer and narrator
 summarizer = pipeline("summarization")
 narrator = pyttsx3.init()
 
-# Mock health data
+# -------------------------------
+# Mock Data
 def get_mock_data():
     return pd.DataFrame({
         'Metric': ['Heart Rate', 'Blood Pressure (Systolic)', 'Blood Pressure (Diastolic)', 'SpO2', 'Temperature'],
@@ -22,7 +33,8 @@ def get_mock_data():
         'Normal Range': ['60-100 bpm', '90-120 mmHg', '60-80 mmHg', '95-100%', '97-99°F']
     })
 
-# Dynamic health tips
+# -------------------------------
+# Dynamic Health Tips
 def get_health_tips(symptoms):
     tips = {
         "Fever": "Stay hydrated and rest well.",
@@ -32,7 +44,7 @@ def get_health_tips(symptoms):
         "Cold": "Drink warm fluids and avoid allergens."
     }
     return [tips.get(symptom, "Consult a doctor for personalized advice.") for symptom in symptoms]
-
+    
 # Recommend doctor/specialist
 def recommend_doctor(df):
     if df['Severity'].max() >= 4:
@@ -62,70 +74,110 @@ def suggest_articles(symptoms):
     links = [f"- [{symptom} Guide]({articles.get(symptom, 'https://www.webmd.com/')})" for symptom in symptoms]
     return "\n".join(links)
     
-# Generate PDF of results
-def generate_pdf(df):
+# -------------------------------
+# Save to SQLite
+def save_to_database(df):
+    conn = sqlite3.connect("health_data.db")
+    df.to_sql("results", conn, if_exists="append", index=False)
+    conn.close()
+
+# -------------------------------
+# Export to JSON
+def export_json(df):
+    return json.dumps(df.to_dict(orient="records"), indent=4)
+
+# -------------------------------
+# Export to CSV
+def export_csv(df):
+    return df.to_csv(index=False)
+
+# -------------------------------
+# Export PDF
+def export_pdf(df):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt="Health Results Summary", ln=True, align='C')
+    pdf.cell(200, 10, txt="Health Report", ln=True, align='C')
+    pdf.ln()
 
-    for i in range(len(df)):
-        row = df.iloc[i]
+    for index, row in df.iterrows():
         pdf.cell(200, 10, txt=f"{row['Metric']}: {row['Value']} ({row['Normal Range']})", ln=True)
 
-    pdf.output("/tmp/health_report.pdf")
-    return "/tmp/health_report.pdf"
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        pdf.output(tmp.name)
+        return tmp.name
 
-# Download PDF helper
-def download_pdf_button(filepath):
-    with open(filepath, "rb") as f:
-        base64_pdf = base64.b64encode(f.read()).decode('utf-8')
-    href = f'<a href="data:application/pdf;base64,{base64_pdf}" download="health_report.pdf">📄 Download Health Report PDF</a>'
-    st.markdown(href, unsafe_allow_html=True)
+# -------------------------------
+# Voice Input to Text
+def listen_to_user():
+    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        st.info("Listening... Speak now!")
+        audio = recognizer.listen(source, timeout=5)
+        try:
+            text = recognizer.recognize_google(audio)
+            st.success(f"You said: {text}")
+            return text
+        except sr.UnknownValueError:
+            st.error("Sorry, could not understand audio.")
+        except sr.RequestError:
+            st.error("Could not request results. Check internet.")
+    return ""
 
-# Summarize and speak results
-def narrate_summary(text):
-    summary = summarizer(text, max_length=60, min_length=20, do_sample=False)[0]['summary_text']
-    st.subheader("📢 Summary:")
-    st.info(summary)
-    narrator.say(summary)
-    narrator.runAndWait()
-
-# Display Heatmap
-def show_heatmap(df):
-    st.subheader("📊 Health Metric Heatmap")
-    df_heatmap = df[['Metric', 'Value']].set_index('Metric')
-    sns.heatmap(df_heatmap, annot=True, cmap='YlOrRd', linewidths=1)
-    st.pyplot()
-
-# Main function
+# -------------------------------
+# Page Logic
 def show_results():
-    st.title("🧪 Health Analysis Results")
-
+    st.title("🧾 Health Results Summary")
+    
     df = get_mock_data()
     st.dataframe(df, use_container_width=True)
 
-    show_heatmap(df)
+    st.subheader("📊 Line Chart of Health Metrics")
+    plt.plot(df['Metric'], df['Value'], marker='o')
+    plt.xticks(rotation=30)
+    plt.ylabel("Value")
+    st.pyplot()
 
-    # Narrate and summarize
-    text_block = " ".join([f"{row['Metric']} is {row['Value']} which should be in {row['Normal Range']}." for _, row in df.iterrows()])
-    narrate_summary(text_block)
+    st.subheader("🔥 Heatmap of Health Metrics")
+    df_numeric = df[['Value']].T
+    sns.heatmap(df_numeric, annot=True, cmap="YlOrRd", cbar=True)
+    st.pyplot()
 
-    # Export as PDF
-    st.subheader("📄 Export Report")
-    pdf_path = generate_pdf(df)
-    download_pdf_button(pdf_path)
-
-    # In-app PDF preview
-    with open(pdf_path, "rb") as file:
-        base64_pdf = base64.b64encode(file.read()).decode('utf-8')
-        pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="500px" type="application/pdf"></iframe>'
-        st.markdown("### 📑 Preview Report")
-        st.markdown(pdf_display, unsafe_allow_html=True)
-
-    # Health tips
-    st.subheader("💡 Personalized Health Tips")
-    selected_symptoms = st.multiselect("Select any symptoms you’re experiencing:", ["Fever", "Cough", "Fatigue", "Headache", "Cold"])
+    st.subheader("📌 Health Tips")
+    selected_symptoms = st.multiselect("Select symptoms:", ["Fever", "Cough", "Fatigue", "Headache", "Cold"])
     if selected_symptoms:
-        for tip in get_health_tips(selected_symptoms):
-            st.success(tip)
+        tips = get_health_tips(selected_symptoms)
+        for tip in tips:
+            st.info(f"💡 {tip}")
+
+    st.subheader("🗣 Voice Narration")
+    if st.button("Narrate Summary"):
+        summary_text = summarizer(str(df.to_dict()))[0]['summary_text']
+        st.success("Narrating Summary...")
+        narrator.say(summary_text)
+        narrator.runAndWait()
+
+    st.subheader("🎙 Voice Input (Symptoms)")
+    if st.button("Start Voice Input"):
+        user_text = listen_to_user()
+        if user_text:
+            st.write("You said:", user_text)
+
+    st.subheader("💾 Export & Save Options")
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        if st.button("Export JSON"):
+            st.download_button("Download JSON", export_json(df), file_name="health_data.json")
+    with col2:
+        if st.button("Export CSV"):
+            st.download_button("Download CSV", export_csv(df), file_name="health_data.csv")
+    with col3:
+        if st.button("Export PDF"):
+            pdf_path = export_pdf(df)
+            with open(pdf_path, "rb") as f:
+                st.download_button("Download PDF", f, file_name="health_report.pdf")
+            os.remove(pdf_path)
+    with col4:
+        if st.button("Save to Database"):
+            save_to_database(df)
+            st.success("Saved to database!")
