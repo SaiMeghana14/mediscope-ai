@@ -1,30 +1,31 @@
 import streamlit as st
+from PIL import Image
+from frontend.styles import apply_custom_styles
 
 def show_home():
-    st.title("🏠 Welcome to MediScope-AI")
-    st.markdown("""
-        **MediScope-AI** is your AI-powered assistant for medical diagnosis support. 
-        Use the sidebar to explore the tools:
-        - 🖼️ Upload scans for image diagnosis
-        - 🎙️ Upload doctor voice notes
-        - 💬 Describe symptoms and get AI insights
-    """)
+    apply_custom_styles()  # Apply futuristic CSS
 
-col1, col2 = st.columns(2)
+    st.markdown("<h1 class='title'>🤖 MediScope-AI</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='subtitle'>Smart Health Diagnosis & Report Generator</p>", unsafe_allow_html=True)
 
-with col1:
-    st.markdown("""
-    <div style="padding:20px;border-radius:15px;background:#f0f2f6;">
-        <h3>🧠 AI-Powered Diagnosis</h3>
-        <p>Detects TB, Pneumonia, and more with accuracy.</p>
-    </div>
-    """, unsafe_allow_html=True)
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        st.image("frontend/assets/ai-doctor.png", use_column_width=True)
+    with col2:
+        st.markdown("""
+        <div class='info-box'>
+        <p><strong>🧬 Enter symptoms</strong> and get a detailed possible diagnosis using AI.</p>
+        <p><strong>📊 See visual charts</strong> and heatmaps based on your inputs.</p>
+        <p><strong>📄 Download medical report</strong> with AI summary in PDF.</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-with col2:
+    st.markdown("---")
+
     st.markdown("""
-    <div style="padding:20px;border-radius:15px;background:#f0f2f6;">
-        <h3>📤 Upload & Analyze</h3>
-        <p>Just upload your X-ray and get instant feedback.</p>
+    <div class='get-started'>
+    <h3>✨ Ready to get started?</h3>
+    <p>Navigate to the <strong>Results</strong> tab to enter your symptoms and generate a smart report.</p>
     </div>
     """, unsafe_allow_html=True)
 
