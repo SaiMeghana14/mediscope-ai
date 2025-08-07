@@ -23,3 +23,5 @@ PAGES[choice]()
 
 translated_title = translate_text("Mediscope AI – Your Health Assistant", target_lang)
 st.title(translated_title)
+
+mode = st.sidebar.radio("Choose mode:", ["Doctor", "Patient"])
