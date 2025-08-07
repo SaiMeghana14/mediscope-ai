@@ -5,6 +5,7 @@ pydantic
 python-multipart
 pillow
 streamlit
+matplotlib
 requests
 aiofiles
 python-dotenv
