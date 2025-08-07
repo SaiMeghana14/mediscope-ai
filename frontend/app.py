@@ -12,7 +12,7 @@ with open("frontend/styles.css") as f:
     
 PAGES = {
     "Home": show_home,
-    "Language": language_selector,
+    "Language": select_language,
     "Results": show_results,
     "Feedback": show_feedback,
     "History": show_history
