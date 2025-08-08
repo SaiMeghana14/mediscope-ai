@@ -9,9 +9,16 @@ def show_history():
                 st.markdown(msg["content"])
     else:
         st.info("No chat history yet. Ask something in the chatbot to start.")
-         
-     st.title("📜 Previous Reports")
-         st.info("This section can be connected to your database or storage to fetch patient history.")
-         history = fetch_history()
-         for t, d, c in history:
-             st.markdown(f"**🕒 {t}** — _{d}_ — Confidence: {c*100:.1f}%")
+
+    # This part should be **outside** the else block
+    st.title("📜 Previous Reports")
+    st.info("This section can be connected to your database or storage to fetch patient history.")
+    
+    # If you haven't defined fetch_history yet, you’ll get an error.
+    # Add a mock or import before using it
+    try:
+        history = fetch_history()
+        for t, d, c in history:
+            st.markdown(f"**🕒 {t}** — _{d}_ — Confidence: {c*100:.1f}%")
+    except NameError:
+        st.warning("⚠️ fetch_history() is not defined. Please implement it or import from the backend.")
