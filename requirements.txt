@@ -6,7 +6,6 @@ plotly
 seaborn
 numpy
 scikit-learn
-pdfkit
 reportlab
 sqlite-utils
 pyttsx3
