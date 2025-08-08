@@ -10,3 +10,4 @@ reportlab
 SpeechRecognition
 transformers
 torch
+gTTS
