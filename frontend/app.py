@@ -10,6 +10,7 @@ from database import init_db  # ✅ Import init_db
 
 # ✅ Initialize the database
 init_db()
+create_users_table()
 
 def apply_custom_css():
     with open("frontend/styles.css") as f:
@@ -18,8 +19,6 @@ def apply_custom_css():
 apply_custom_css()
 
 st.set_page_config(page_title="Mediscope-AI", layout="wide", page_icon="🧬")
-
-create_users_table()
 
 # Sidebar Auth Panel
 with st.sidebar:
