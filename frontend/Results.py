@@ -4,23 +4,23 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import json
 import sqlite3
-import pyttsx3
 import speech_recognition as sr
 from transformers import pipeline
+from gtts import gTTS
 from fpdf import FPDF
 import tempfile
 import os
 
 # -------------------------------
-# Login check (dummy session example)
-if not st.session_state.get("logged_in", False):
-    st.warning("Please log in to view results.")
-    st.stop()
+# Summarization pipeline
+summarizer = pipeline("summarization")
 
 # -------------------------------
-# Text summarizer and narrator
-summarizer = pipeline("summarization")
-narrator = pyttsx3.init()
+def speak(text):
+    tts = gTTS(text)
+    filename = "output.mp3"
+    tts.save(filename)
+    st.audio(filename, format="audio/mp3")
 
 # -------------------------------
 # Mock Data
@@ -42,7 +42,8 @@ def get_health_tips(symptoms):
         "Cold": "Drink warm fluids and avoid allergens."
     }
     return [tips.get(symptom, "Consult a doctor for personalized advice.") for symptom in symptoms]
-    
+
+# -------------------------------
 # Recommend doctor/specialist
 def recommend_doctor(df):
     if df['Severity'].max() >= 4:
@@ -52,6 +53,7 @@ def recommend_doctor(df):
     else:
         return "🟢 Symptoms appear mild. Home care is advised."
 
+# -------------------------------
 # Add emoji indicator based on severity
 def severity_to_emoji(severity):
     if severity >= 4:
@@ -61,6 +63,7 @@ def severity_to_emoji(severity):
     else:
         return "🟢"
 
+# -------------------------------
 # Suggested articles (demo static list)
 def suggest_articles(symptoms):
     articles = {
@@ -71,7 +74,7 @@ def suggest_articles(symptoms):
     }
     links = [f"- [{symptom} Guide]({articles.get(symptom, 'https://www.webmd.com/')})" for symptom in symptoms]
     return "\n".join(links)
-    
+
 # -------------------------------
 # Save to SQLite
 def save_to_database(df):
@@ -126,7 +129,7 @@ def listen_to_user():
 # Page Logic
 def show_results():
     st.title("🧾 Health Results Summary")
-    
+
     df = get_mock_data()
     st.dataframe(df, use_container_width=True)
 
@@ -152,8 +155,7 @@ def show_results():
     if st.button("Narrate Summary"):
         summary_text = summarizer(str(df.to_dict()))[0]['summary_text']
         st.success("Narrating Summary...")
-        narrator.say(summary_text)
-        narrator.runAndWait()
+        speak(summary_text)
 
     st.subheader("🎙 Voice Input (Symptoms)")
     if st.button("Start Voice Input"):
