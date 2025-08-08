@@ -8,7 +8,6 @@ from LanguageSelector import select_language
 from Chatbot import show_chatbot
 from database import init_db  # ✅ Import init_db
 
-print(fpdf.__version__)
 # ✅ Initialize the database
 init_db()
 
