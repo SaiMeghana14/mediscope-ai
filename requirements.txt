@@ -7,10 +7,6 @@ seaborn
 numpy
 scikit-learn
 reportlab
-sqlite-utils
-pyttsx3
 SpeechRecognition
-pyaudio
 transformers
 torch
-fpdf
