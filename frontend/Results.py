@@ -13,7 +13,7 @@ import os
 
 # -------------------------------
 # Summarization pipeline
-summarizer = pipeline("summarization")
+summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
 
 # -------------------------------
 def speak(text):
@@ -134,7 +134,7 @@ def show_results():
     st.dataframe(df, use_container_width=True)
 
     st.subheader("📊 Line Chart of Health Metrics")
-    plt.plot(df['Metric'], df['Value'], marker='o')
+    df.plot(x='Metric', y='Value', kind='line', marker='o')
     plt.xticks(rotation=30)
     plt.ylabel("Value")
     st.pyplot()
