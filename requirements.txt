@@ -14,3 +14,4 @@ torch
 gTTS
 fpdf2>=2.7.8
 python-dotenv
+openai
