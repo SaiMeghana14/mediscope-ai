@@ -1,6 +1,6 @@
 import streamlit as st
 from Home import show_home
-from auth import create_users_table, add_user, validate_login
+from auth import create_user_table, add_user, login_user, hash_password
 from Results import show_results
 from Feedback import show_feedback
 from History import show_history
@@ -21,41 +21,34 @@ st.set_page_config(page_title="Mediscope-AI", layout="wide", page_icon="🧬")
 
 create_users_table()
 
-# Initialize session state
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-    st.session_state.username = ""
-
 # Sidebar Auth Panel
 with st.sidebar:
     st.title("🔒 Login Panel")
+menu = ["Login", "Sign Up"]
+choice = st.sidebar.selectbox("Menu", menu)
 
-    if not st.session_state.logged_in:
-        tab = st.radio("Choose", ["Login", "Sign Up"])
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-
-        if tab == "Login":
-            if st.button("Login"):
-                if validate_login(username, password):
-                    st.session_state.logged_in = True
-                    st.session_state.username = username
-                    st.success(f"Welcome, {username}!")
-                else:
-                    st.error("Invalid username or password.")
+# Initialize session state
+if choice == "Login":
+    st.subheader("Login")
+    username = st.text_input("User Name")
+    password = st.text_input("Password", type='password')
+    if st.button("Login"):
+        hashed_pw = hash_password(password)
+        result = login_user(username, hashed_pw)
+        if result:
+            st.success(f"Welcome {username}")
+            # Proceed to show the app
         else:
-            if st.button("Sign Up"):
-                if add_user(username, password):
-                    st.success("Account created. Please login.")
-                else:
-                    st.warning("Username already exists.")
+            st.error("Invalid Username/Password")
 
-    else:
-        st.success(f"Logged in as {st.session_state.username}")
-        if st.button("Logout"):
-            st.session_state.logged_in = False
-            st.session_state.username = ""
-
+elif choice == "Sign Up":
+    st.subheader("Create New Account")
+    new_user = st.text_input("Username")
+    new_pass = st.text_input("Password", type='password')
+    if st.button("Sign Up"):
+        add_user(new_user, hash_password(new_pass))
+        st.success("Account created")
+        st.info("Go to Login Menu to login")
 
 # Language Selector
 select_language()
