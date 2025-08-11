@@ -5,6 +5,7 @@ from Results import show_results
 from Feedback import show_feedback
 from History import show_history
 from LanguageSelector import language_selector
+from translate_module import translate_text  # your existing translate function
 from Chatbot import show_chatbot
 from database import init_db, save_user, verify_user
 from datetime import datetime, timedelta
@@ -108,8 +109,13 @@ else:
         show_history()
 
 
-# Language Selector
-language_selector
+# Get the selected target language code
+target_lang = language_selector()
+
+# Translate title dynamically
+translated_title = translate_text("Mediscope AI – Your Health Assistant", target_lang)
+st.title(translated_title)
+
 
 with open("frontend/styles.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
