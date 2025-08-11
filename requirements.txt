@@ -1,4 +1,4 @@
-streamlit>=1.35.0
+streamlit==1.37.0
 streamlit-authenticator
 deep-translator
 streamlit-mic-recorder
@@ -16,3 +16,4 @@ gTTS
 fpdf2>=2.7.8
 python-dotenv
 openai
+bcrypt
