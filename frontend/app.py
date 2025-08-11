@@ -6,48 +6,70 @@ from Feedback import show_feedback
 from History import show_history
 from LanguageSelector import select_language
 from Chatbot import show_chatbot
-from database import init_db  # ✅ Import init_db
+from database import init_db, save_user, verify_user
 
-# ✅ Initialize the database
+# Initialize database
 init_db()
-create_users_table()
 
-def apply_custom_css():
-    with open("frontend/styles.css") as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+# Login state
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "username" not in st.session_state:
+    st.session_state.username = None
 
-apply_custom_css()
+def login_ui():
+    st.title("🔐 Login to MediScope AI")
 
-st.set_page_config(page_title="Mediscope-AI", layout="wide", page_icon="🧬")
+    tab1, tab2 = st.tabs(["Login", "Register"])
 
-# Sidebar Auth Panel
-with st.sidebar:
-    st.title("🔒 Login Panel")
-menu = ["Login", "Sign Up"]
-choice = st.sidebar.selectbox("Menu", menu)
+    # ---------------- LOGIN ----------------
+    with tab1:
+        username = st.text_input("Username", key="login_user")
+        password = st.text_input("Password", type="password", key="login_pass")
+        if st.button("Login", key="login_btn"):
+            if verify_user(username, password):
+                st.session_state.logged_in = True
+                st.session_state.username = username
+                st.success(f"✅ Welcome back, {username}!")
+                st.experimental_rerun()
+            else:
+                st.error("❌ Invalid username or password")
 
-# Initialize session state
-if choice == "Login":
-    st.subheader("Login")
-    username = st.text_input("User Name")
-    password = st.text_input("Password", type='password')
-    if st.button("Login"):
-        hashed_pw = hash_password(password)
-        result = login_user(username, hashed_pw)
-        if result:
-            st.success(f"Welcome {username}")
-            # Proceed to show the app
-        else:
-            st.error("Invalid Username/Password")
+    # ---------------- REGISTER ----------------
+    with tab2:
+        new_user = st.text_input("Choose Username", key="reg_user")
+        new_pass = st.text_input("Choose Password", type="password", key="reg_pass")
+        email = st.text_input("Email", key="reg_email")
+        if st.button("Register", key="reg_btn"):
+            if new_user and new_pass:
+                try:
+                    save_user(new_user, new_pass, email)
+                    st.success("✅ Account created! Please log in.")
+                except Exception as e:
+                    st.error(f"❌ Error: {e}")
+            else:
+                st.warning("⚠️ Please fill in all fields.")
 
-elif choice == "Sign Up":
-    st.subheader("Create New Account")
-    new_user = st.text_input("Username")
-    new_pass = st.text_input("Password", type='password')
-    if st.button("Sign Up"):
-        add_user(new_user, hash_password(new_pass))
-        st.success("Account created")
-        st.info("Go to Login Menu to login")
+# ---------------------------
+# Show either login or main app
+if not st.session_state.logged_in:
+    login_ui()
+else:
+    st.sidebar.success(f"Logged in as {st.session_state.username}")
+    st.title("🏥 MediScope AI Dashboard")
+
+    # Import after login to prevent early execution
+    from Results import show_results
+    from History import show_history
+    from Chatbot import show_chatbot
+
+    menu = st.sidebar.radio("Navigation", ["Chatbot", "Results", "History"])
+    if menu == "Chatbot":
+        show_chatbot()
+    elif menu == "Results":
+        show_results()
+    elif menu == "History":
+        show_history()
 
 # Language Selector
 select_language()
