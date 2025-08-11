@@ -92,7 +92,7 @@ def show_home():
     """, unsafe_allow_html=True)
 
 if st.button("Run Test Case"):
-    st.session_state["image_path"] = "frontend/assets/sample_xray.jpg"
+    st.session_state["image_path"] = "frontend/assets/sample_xray.png"
     st.session_state["auto_test"] = True
     st.experimental_rerun()
 
