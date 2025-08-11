@@ -76,7 +76,7 @@ def login_ui():
                 st.session_state.login_expiry = datetime.now() + timedelta(hours=expiry_hours)
 
                 st.success(f"✅ Welcome back, {username}!")
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("❌ Invalid username or password")
 
