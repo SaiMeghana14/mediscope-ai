@@ -43,7 +43,7 @@ def logout():
 def login_ui():
     st.title("🔐 Login to MediScope AI")
 
-    tab1, tab2 = st.tabs(["Login", "Register"])
+    tab1, tab2 = st.tabs(["Register", "Login"])
 
        # ---------------- REGISTER ----------------
     with tab1:
