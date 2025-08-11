@@ -72,7 +72,7 @@ def show_home():
 
     col1, col2 = st.columns([1, 2])
     with col1:
-        st.image("frontend/assets/ai-doctor.png", use_column_width=True)
+        st.image("frontend/assets/ai-doctor.jpg", use_column_width=True)
     with col2:
         st.markdown("""
         <div class='info-box'>
