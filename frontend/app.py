@@ -7,36 +7,46 @@ from History import show_history
 from LanguageSelector import select_language
 from Chatbot import show_chatbot
 from database import init_db, save_user, verify_user
+from datetime import datetime, timedelta
 
+# ---------------------------
 # Initialize database
 init_db()
 
-# Login state
+# ---------------------------
+# Persistent session state
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "username" not in st.session_state:
     st.session_state.username = None
+if "login_expiry" not in st.session_state:
+    st.session_state.login_expiry = None
 
+# ---------------------------
+# Auto-logout if session expired
+def check_session():
+    if st.session_state.logged_in and st.session_state.login_expiry:
+        if datetime.now() > st.session_state.login_expiry:
+            st.warning("⚠️ Your session has expired. Please log in again.")
+            logout()
+
+# ---------------------------
+# Logout
+def logout():
+    st.session_state.logged_in = False
+    st.session_state.username = None
+    st.session_state.login_expiry = None
+    st.experimental_rerun()
+
+# ---------------------------
+# Login UI
 def login_ui():
     st.title("🔐 Login to MediScope AI")
 
     tab1, tab2 = st.tabs(["Login", "Register"])
 
-    # ---------------- LOGIN ----------------
+       # ---------------- REGISTER ----------------
     with tab1:
-        username = st.text_input("Username", key="login_user")
-        password = st.text_input("Password", type="password", key="login_pass")
-        if st.button("Login", key="login_btn"):
-            if verify_user(username, password):
-                st.session_state.logged_in = True
-                st.session_state.username = username
-                st.success(f"✅ Welcome back, {username}!")
-                st.experimental_rerun()
-            else:
-                st.error("❌ Invalid username or password")
-
-    # ---------------- REGISTER ----------------
-    with tab2:
         new_user = st.text_input("Choose Username", key="reg_user")
         new_pass = st.text_input("Choose Password", type="password", key="reg_pass")
         email = st.text_input("Email", key="reg_email")
@@ -50,12 +60,38 @@ def login_ui():
             else:
                 st.warning("⚠️ Please fill in all fields.")
 
+    # ---------------- LOGIN ----------------
+    with tab2:
+        username = st.text_input("Username", key="login_user")
+        password = st.text_input("Password", type="password", key="login_pass")
+        remember_me = st.checkbox("Remember Me")
+
+        if st.button("Login", key="login_btn"):
+            if verify_user(username, password):
+                st.session_state.logged_in = True
+                st.session_state.username = username
+
+                # If Remember Me checked → 7-day expiry, else 1-hour session
+                expiry_hours = 24 * 7 if remember_me else 1
+                st.session_state.login_expiry = datetime.now() + timedelta(hours=expiry_hours)
+
+                st.success(f"✅ Welcome back, {username}!")
+                st.experimental_rerun()
+            else:
+                st.error("❌ Invalid username or password")
+
+ 
 # ---------------------------
-# Show either login or main app
+# Main App
+check_session()
+
 if not st.session_state.logged_in:
     login_ui()
 else:
     st.sidebar.success(f"Logged in as {st.session_state.username}")
+    if st.sidebar.button("🚪 Log Out"):
+        logout()
+
     st.title("🏥 MediScope AI Dashboard")
 
     # Import after login to prevent early execution
@@ -70,6 +106,7 @@ else:
         show_results()
     elif menu == "History":
         show_history()
+
 
 # Language Selector
 select_language()
