@@ -109,14 +109,14 @@ else:
 
 
 # Language Selector
-select_language()
+language_selector
 
 with open("frontend/styles.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
     
 PAGES = {
     "Home": show_home,
-    "Language": select_language,
+    "Language": language_selector,
     "Chat with AI": show_chatbot,
     "Results": show_results,
     "Feedback": show_feedback,
