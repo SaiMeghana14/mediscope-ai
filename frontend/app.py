@@ -4,7 +4,7 @@ from auth import create_user_table, add_user, login_user, hash_password
 from Results import show_results
 from Feedback import show_feedback
 from History import show_history
-from LanguageSelector import select_language
+from LanguageSelector import language_selector
 from Chatbot import show_chatbot
 from database import init_db, save_user, verify_user
 from datetime import datetime, timedelta
