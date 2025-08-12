@@ -24,6 +24,7 @@ def language_selector(default_language="English"):
     selected_lang_name = st.sidebar.selectbox(
         "🌐 Choose Language",
         list(SUPPORTED_LANGUAGES.keys()),
-        index=list(SUPPORTED_LANGUAGES.keys()).index(default_language)
+        index=list(SUPPORTED_LANGUAGES.keys()).index(default_language),
+        key="sidebar_language_selector"  # Unique widget key
     )
     return SUPPORTED_LANGUAGES[selected_lang_name]
