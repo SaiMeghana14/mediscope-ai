@@ -131,10 +131,6 @@ else:
         show_history()
 
 
-# Get the selected target language code
-init_language_selector(default_language="English")
-target_lang = get_lang_code()
-
 # Translate title dynamically
 translated_title = translate_text("Mediscope AI – Your Health Assistant", target_lang)
 st.title(translated_title)
@@ -166,7 +162,5 @@ if selection == "Home" or st.session_state.get("logged_in", False):
 else:
     st.warning("🔐 Please log in to access this page.")
     
-translated_title = translate_text("Mediscope AI – Your Health Assistant", target_lang)
-st.title(translated_title)
 
 mode = st.sidebar.radio("Choose mode:", ["Doctor", "Patient"])
