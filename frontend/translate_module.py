@@ -1,16 +1,21 @@
-from googletrans import Translator
+from deep_translator import GoogleTranslator
 
-translator = Translator()
+def translate_text(text: str, target_lang: str) -> str:
+    """
+    Translates given text into the target language.
+    
+    Args:
+        text (str): The text to be translated.
+        target_lang (str): The target language code (e.g., 'en', 'fr', 'te', 'hi').
 
-def translate_text(text, target_language="en"):
+    Returns:
+        str: Translated text.
     """
-    Translates text into the target language.
-    :param text: string to translate
-    :param target_language: ISO 639-1 language code (default: English 'en')
-    :return: translated string
-    """
+    if not text.strip():
+        return ""
+    
     try:
-        translated = translator.translate(text, dest=target_language)
-        return translated.text
+        translated = GoogleTranslator(source='auto', target=target_lang).translate(text)
+        return translated
     except Exception as e:
         return f"[Translation Error: {e}]"
