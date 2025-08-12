@@ -128,7 +128,8 @@ else:
 
 
 # Get the selected target language code
-target_lang = language_selector()
+init_language_selector(default_language="English")
+target_lang = get_lang_code()
 
 # Translate title dynamically
 translated_title = translate_text("Mediscope AI – Your Health Assistant", target_lang)
