@@ -1,6 +1,7 @@
 streamlit==1.37.0
 streamlit-authenticator
 deep-translator
+googletrans==4.0.0-rc1
 streamlit-mic-recorder
 pandas
 matplotlib
