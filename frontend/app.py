@@ -120,6 +120,7 @@ st.title(translated_title)
 with open("frontend/styles.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
     
+# Dictionary of pages and their corresponding functions
 PAGES = {
     "Home": show_home,
     "Language": language_selector,
@@ -129,14 +130,16 @@ PAGES = {
     "History": show_history
 }
 
+# Sidebar navigation
 st.sidebar.title("🩺 Mediscope-AI")
 selection = st.sidebar.radio("Navigate", list(PAGES.keys()))
 
-page = PAGES[selection]
-page()
+# Get the function for the selected page
+page_func = PAGES[selection]
 
-if page == "Home" or st.session_state.logged_in:
-    PAGES[page]()
+# Login access control
+if selection == "Home" or st.session_state.get("logged_in", False):
+    page_func()  # Call the selected page
 else:
     st.warning("🔐 Please log in to access this page.")
     
