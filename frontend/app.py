@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append(os.path.dirname(__file__))
+
 import streamlit as st
 from Home import show_home
 from auth import create_user_table, add_user, login_user, hash_password
