@@ -4,12 +4,30 @@ from auth import create_user_table, add_user, login_user, hash_password
 from Results import show_results
 from Feedback import show_feedback
 from History import show_history
-from LanguageSelector import language_selector
+from LanguageSelector import init_language_selector, get_lang_code
 from translate_module import translate_text  # your existing translate function
 from Chatbot import show_chatbot
 from database import init_db, save_user, verify_user
 from datetime import datetime, timedelta
 
+# ---------------------------
+# 1️⃣ First thing: Initialize language selector
+init_language_selector(default_language="English")
+
+# 2️⃣ Now you can use the selected language anywhere
+st.title("🌟 My Multilingual App")
+
+current_lang = get_lang_code()
+st.write(f"Current language code: {current_lang}")
+
+# Example conditional content
+if current_lang == "hi":
+    st.write("नमस्ते! आपने हिंदी चुना है।")
+elif current_lang == "te":
+    st.write("హలో! మీరు తెలుగు ఎంచుకున్నారు.")
+else:
+    st.write("Hello! You selected English.")
+    
 # ---------------------------
 # Initialize database
 init_db()
