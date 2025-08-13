@@ -4,12 +4,13 @@ from openai import OpenAIError
 from gtts import gTTS
 from io import BytesIO
 from streamlit_mic_recorder import mic_recorder
-import tempfile
+from translate_module import translate_text
+from datetime import datetime
+import uuid
 
 # Load OpenAI API key securely
 openai.api_key = st.secrets.get("openai_api_key", "")
 
-# Page layout
 def show_chatbot():
     st.markdown("<h2 style='color:#00f4c1;'>🧠 AI Diagnosis Assistant</h2>", unsafe_allow_html=True)
     st.markdown("💬 Ask me about any medical term, test result, or health condition from your report.")
@@ -28,7 +29,13 @@ def show_chatbot():
 
     # 🟣 Voice Input
     st.markdown("🎙️ Speak your query or type below:")
-    audio = mic_recorder(start_prompt="🎤 Start Recording", stop_prompt="🛑 Stop", just_once=True, key="voice")
+    mic_key = f"voice_{uuid.uuid4().hex}"  # unique key each render
+    audio = mic_recorder(
+        start_prompt="🎤 Start Recording",
+        stop_prompt="🛑 Stop",
+        just_once=True,
+        key=mic_key
+    )
 
     user_input = ""
 
@@ -42,9 +49,19 @@ def show_chatbot():
             st.error("Voice transcription failed.")
 
     # Fallback to text input
-    user_input = st.chat_input("Type your medical question here...") or user_input
+    typed_input = st.chat_input("Type your medical question here...")
+    if typed_input:
+        user_input = typed_input
 
     if user_input:
+        # Detect UI language (you could set this from app.py)
+        target_lang = st.session_state.get("lang_code", "en")
+
+        # Translate user input to English for AI processing
+        user_input_en = (
+            translate_text(user_input, "en") if target_lang != "en" else user_input
+        )
+
         st.session_state.messages.append({"role": "user", "content": user_input})
         with st.chat_message("user"):
             st.markdown(user_input)
@@ -55,23 +72,41 @@ def show_chatbot():
                 with st.spinner("🧠 Thinking..."):
                     response = openai.ChatCompletion.create(
                         model="gpt-4",
-                        messages=st.session_state.messages,
+                        messages=[
+                            {"role": "system", "content": "You are a helpful multilingual medical assistant."},
+                            *[
+                                {"role": m["role"], "content": m["content"]}
+                                for m in st.session_state.messages
+                                if m["role"] in ["user", "assistant"]
+                            ]
+                        ],
                         temperature=0.5,
                         max_tokens=600
                     )
-                    reply = response.choices[0].message.content.strip()
-                    st.markdown(reply)
+                    reply_en = response.choices[0].message.content.strip()
 
-                    # 🟢 Text-to-Speech (TTS)
-                    tts = gTTS(text=reply, lang="en")
-                    tts_audio = BytesIO()
-                    tts.write_to_fp(tts_audio)
-                    st.audio(tts_audio.getvalue(), format="audio/mp3")
+                    # Translate back to target language if needed
+                    reply_final = (
+                        translate_text(reply_en, target_lang)
+                        if target_lang != "en"
+                        else reply_en
+                    )
+
+                    st.markdown(reply_final)
+
+                    # 🟢 Text-to-Speech (TTS) in target language
+                    try:
+                        tts = gTTS(text=reply_final, lang=target_lang)
+                        tts_audio = BytesIO()
+                        tts.write_to_fp(tts_audio)
+                        st.audio(tts_audio.getvalue(), format="audio/mp3")
+                    except Exception:
+                        pass  # Skip TTS errors silently
 
             # Save assistant message
-            st.session_state.messages.append({"role": "assistant", "content": reply})
+            st.session_state.messages.append({"role": "assistant", "content": reply_final})
 
-        except OpenAIError as e:
+        except OpenAIError:
             st.error("⚠️ OpenAI API error: Please try again later.")
             st.session_state.messages.append({
                 "role": "assistant",
