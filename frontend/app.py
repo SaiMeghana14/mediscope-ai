@@ -9,7 +9,7 @@ from Results import show_results
 from Feedback import show_feedback
 from History import show_history
 from LanguageSelector import init_language_selector, get_lang_code
-from translate_module import translate_text  # your existing translate function
+from translate_module import translate_text
 from Chatbot import show_chatbot
 from database import init_db, save_user, verify_user
 from datetime import datetime, timedelta
@@ -18,20 +18,18 @@ from datetime import datetime, timedelta
 # 1️⃣ First thing: Initialize language selector
 init_language_selector(default_language="English")
 
-# 2️⃣ Now you can use the selected language anywhere
+# 2️⃣ Multilingual greeting
 st.title("🌟 My Multilingual App")
-
 current_lang = get_lang_code()
 st.write(f"Current language code: {current_lang}")
 
-# Example conditional content
 if current_lang == "hi":
     st.write("नमस्ते! आपने हिंदी चुना है।")
 elif current_lang == "te":
     st.write("హలో! మీరు తెలుగు ఎంచుకున్నారు.")
 else:
     st.write("Hello! You selected English.")
-    
+
 # ---------------------------
 # Initialize database
 init_db()
@@ -65,10 +63,9 @@ def logout():
 # Login UI
 def login_ui():
     st.title("🔐 Login to MediScope AI")
-
     tab1, tab2 = st.tabs(["Register", "Login"])
 
-       # ---------------- REGISTER ----------------
+    # Register tab
     with tab1:
         new_user = st.text_input("Choose Username", key="reg_user")
         new_pass = st.text_input("Choose Password", type="password", key="reg_pass")
@@ -83,7 +80,7 @@ def login_ui():
             else:
                 st.warning("⚠️ Please fill in all fields.")
 
-    # ---------------- LOGIN ----------------
+    # Login tab
     with tab2:
         username = st.text_input("Username", key="login_user")
         password = st.text_input("Password", type="password", key="login_pass")
@@ -93,17 +90,13 @@ def login_ui():
             if verify_user(username, password):
                 st.session_state.logged_in = True
                 st.session_state.username = username
-
-                # If Remember Me checked → 7-day expiry, else 1-hour session
                 expiry_hours = 24 * 7 if remember_me else 1
                 st.session_state.login_expiry = datetime.now() + timedelta(hours=expiry_hours)
-
                 st.success(f"✅ Welcome back, {username}!")
                 st.rerun()
             else:
                 st.error("❌ Invalid username or password")
 
- 
 # ---------------------------
 # Main App
 check_session()
@@ -117,11 +110,6 @@ else:
 
     st.title("🏥 MediScope AI Dashboard")
 
-    # Import after login to prevent early execution
-    from Results import show_results
-    from History import show_history
-    from Chatbot import show_chatbot
-
     menu = st.sidebar.radio("Navigation", ["Chatbot", "Results", "History"])
     if menu == "Chatbot":
         show_chatbot()
@@ -130,19 +118,20 @@ else:
     elif menu == "History":
         show_history()
 
-
+# ---------------------------
 # Translate title dynamically
-translated_title = translate_text("Mediscope AI – Your Health Assistant", target_lang)
+translated_title = translate_text("Mediscope AI – Your Health Assistant", current_lang)
 st.title(translated_title)
 
-
+# ---------------------------
+# Load styles
 with open("frontend/styles.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-    
-# Dictionary of pages and their corresponding functions
+
+# ---------------------------
+# Dictionary of pages
 PAGES = {
     "Home": show_home,
-    "Language": language_selector,
     "Chat with AI": show_chatbot,
     "Results": show_results,
     "Feedback": show_feedback,
@@ -152,15 +141,14 @@ PAGES = {
 # Sidebar navigation
 st.sidebar.title("🩺 Mediscope-AI")
 selection = st.sidebar.radio("Navigate", list(PAGES.keys()))
-
-# Get the function for the selected page
 page_func = PAGES[selection]
 
-# Login access control
+# Login access control for pages
 if selection == "Home" or st.session_state.get("logged_in", False):
-    page_func()  # Call the selected page
+    page_func()
 else:
     st.warning("🔐 Please log in to access this page.")
-    
 
+# ---------------------------
+# Mode switch
 mode = st.sidebar.radio("Choose mode:", ["Doctor", "Patient"])
