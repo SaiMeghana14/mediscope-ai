@@ -5,6 +5,7 @@ from gtts import gTTS
 from io import BytesIO
 from streamlit_mic_recorder import mic_recorder
 from translate_module import translate_text
+from LanguageSelector import get_lang_code
 import uuid
 
 # Load OpenAI API key securely
@@ -15,27 +16,17 @@ def show_chatbot():
     st.markdown("💬 Ask me about any medical term, test result, or health condition from your report.")
     st.divider()
 
-    # Get mode from session (set in app.py)
-    user_mode = st.session_state.get("user_mode", "Patient")
+    # Detect selected language from LanguageSelector
+    target_lang = get_lang_code()
 
-    # System prompt depending on mode
-    if user_mode == "Doctor":
-        system_prompt = (
-            "You are a medical assistant speaking to a doctor. "
-            "Use precise medical terminology, reference relevant studies when appropriate, "
-            "and assume the reader has advanced medical knowledge."
-        )
-    else:  # Patient mode
-        system_prompt = (
-            "You are a friendly medical assistant speaking to a patient. "
-            "Avoid complex jargon, explain things in simple everyday language, "
-            "and ensure the tone is supportive and reassuring."
-        )
+    # Get mode from session state (default Patient)
+    mode = st.session_state.get("user_mode", "Patient")
+    st.info(f"📌 You are in **{mode} Mode**. Answers will be tailored accordingly.")
 
     # Session state for chat
     if "messages" not in st.session_state:
         st.session_state.messages = [
-            {"role": "assistant", "content": "👋 Hello! I'm your AI medical assistant. Ask me anything related to your test results or medical terms."}
+            {"role": "assistant", "content": f"👋 Hello! I'm your AI medical assistant in **{mode} mode**. Ask me anything related to your test results or medical terms."}
         ]
 
     # Display existing conversation
@@ -43,15 +34,10 @@ def show_chatbot():
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    # 🟣 Voice Input
+    # 🎙️ Voice Input
     st.markdown("🎙️ Speak your query or type below:")
-    mic_key = f"voice_{uuid.uuid4().hex}"  # unique key each render
-    audio = mic_recorder(
-        start_prompt="🎤 Start Recording",
-        stop_prompt="🛑 Stop",
-        just_once=True,
-        key=mic_key
-    )
+    mic_key = f"voice_{uuid.uuid4().hex}"
+    audio = mic_recorder(start_prompt="🎤 Start Recording", stop_prompt="🛑 Stop", just_once=True, key=mic_key)
 
     user_input = ""
 
@@ -70,22 +56,26 @@ def show_chatbot():
         user_input = typed_input
 
     if user_input:
-        # Detect UI language (set from app.py, default English)
-        target_lang = st.session_state.get("lang_code", "en")
-
         # Translate user input to English for AI processing
-        user_input_en = (
-            translate_text(user_input, "en") if target_lang != "en" else user_input
-        )
+        user_input_en = translate_text(user_input, "en") if target_lang != "en" else user_input
 
         st.session_state.messages.append({"role": "user", "content": user_input})
         with st.chat_message("user"):
             st.markdown(user_input)
 
-        # AI response generation
         try:
             with st.chat_message("assistant"):
                 with st.spinner("🧠 Thinking..."):
+                    # Mode-specific system prompt
+                    system_prompt = (
+                        "You are a highly skilled medical assistant. "
+                        "Provide detailed, technical explanations with medical terminology suitable for a doctor."
+                        if mode == "Doctor"
+                        else
+                        "You are a helpful medical assistant. Provide simple, easy-to-understand explanations without heavy jargon for a patient."
+                    )
+
+                    # Generate response in English first
                     response = openai.ChatCompletion.create(
                         model="gpt-4",
                         messages=[
@@ -101,25 +91,21 @@ def show_chatbot():
                     )
                     reply_en = response.choices[0].message.content.strip()
 
-                    # Translate back to target language if needed
-                    reply_final = (
-                        translate_text(reply_en, target_lang)
-                        if target_lang != "en"
-                        else reply_en
-                    )
+                    # Translate to target language if needed
+                    reply_final = translate_text(reply_en, target_lang) if target_lang != "en" else reply_en
 
                     st.markdown(reply_final)
 
-                    # 🟢 Text-to-Speech (TTS) in target language
+                    # 🟢 Text-to-Speech in target language
                     try:
                         tts = gTTS(text=reply_final, lang=target_lang)
                         tts_audio = BytesIO()
                         tts.write_to_fp(tts_audio)
                         st.audio(tts_audio.getvalue(), format="audio/mp3")
                     except Exception:
-                        pass  # Skip TTS errors silently
+                        pass  # Ignore TTS errors
 
-            # Save assistant message
+            # Save assistant message in original language shown to user
             st.session_state.messages.append({"role": "assistant", "content": reply_final})
 
         except OpenAIError:
@@ -134,6 +120,6 @@ def show_chatbot():
         st.markdown("### 💬 Assistant Settings")
         if st.button("🔄 Reset Chat"):
             st.session_state.messages = [
-                {"role": "assistant", "content": "Hi again! Ask me about your medical results anytime."}
+                {"role": "assistant", "content": f"Hi again! I am ready to help you in **{mode} mode**."}
             ]
             st.success("Assistant reset!")
