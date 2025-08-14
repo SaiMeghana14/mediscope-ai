@@ -18,14 +18,16 @@ from datetime import datetime, timedelta
 # 1️⃣ First thing: Initialize language selector
 init_language_selector(default_language="English")
 
+# Store current language persistently
+st.session_state.current_lang = get_lang_code()
+
 # 2️⃣ Multilingual greeting
 st.title("🌟 My Multilingual App")
-current_lang = get_lang_code()
-st.write(f"Current language code: {current_lang}")
+st.write(f"Current language code: {st.session_state.current_lang}")
 
-if current_lang == "hi":
+if st.session_state.current_lang == "hi":
     st.write("नमस्ते! आपने हिंदी चुना है।")
-elif current_lang == "te":
+elif st.session_state.current_lang == "te":
     st.write("హలో! మీరు తెలుగు ఎంచుకున్నారు.")
 else:
     st.write("Hello! You selected English.")
@@ -42,7 +44,7 @@ if "username" not in st.session_state:
     st.session_state.username = None
 if "login_expiry" not in st.session_state:
     st.session_state.login_expiry = None
-if "user_mode" not in st.session_state:  # store doctor/patient mode
+if "user_mode" not in st.session_state:
     st.session_state.user_mode = "Patient"
 
 # ---------------------------
@@ -67,7 +69,6 @@ def login_ui():
     st.title("🔐 Login to MediScope AI")
     tab1, tab2 = st.tabs(["Register", "Login"])
 
-    # Register tab
     with tab1:
         new_user = st.text_input("Choose Username", key="reg_user")
         new_pass = st.text_input("Choose Password", type="password", key="reg_pass")
@@ -82,7 +83,6 @@ def login_ui():
             else:
                 st.warning("⚠️ Please fill in all fields.")
 
-    # Login tab
     with tab2:
         username = st.text_input("Username", key="login_user")
         password = st.text_input("Password", type="password", key="login_pass")
@@ -114,7 +114,7 @@ else:
 
 # ---------------------------
 # Translate title dynamically
-translated_title = translate_text("Mediscope AI – Your Health Assistant", current_lang)
+translated_title = translate_text("Mediscope AI – Your Health Assistant", st.session_state.current_lang)
 st.title(translated_title)
 
 # ---------------------------
@@ -137,13 +137,15 @@ st.sidebar.title("🩺 Mediscope-AI")
 selection = st.sidebar.radio("Navigate", list(PAGES.keys()))
 page_func = PAGES[selection]
 
-# Login access control for pages
 if selection == "Home" or st.session_state.get("logged_in", False):
     page_func()
 else:
     st.warning("🔐 Please log in to access this page.")
 
 # ---------------------------
-# Mode switch
-mode = st.sidebar.radio("Choose mode:", ["Doctor", "Patient"], index=0 if st.session_state.user_mode == "Doctor" else 1)
-st.session_state.user_mode = mode  # Save mode persistently
+# Mode switch — store in session state
+st.session_state.user_mode = st.sidebar.radio(
+    "Choose mode:",
+    ["Doctor", "Patient"],
+    index=0 if st.session_state.user_mode == "Doctor" else 1
+)
