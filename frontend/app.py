@@ -112,14 +112,6 @@ else:
 
     st.title("🏥 MediScope AI Dashboard")
 
-    menu = st.sidebar.radio("Navigation", ["Chatbot", "Results", "History"])
-    if menu == "Chatbot":
-        show_chatbot()
-    elif menu == "Results":
-        show_results()
-    elif menu == "History":
-        show_history()
-
 # ---------------------------
 # Translate title dynamically
 translated_title = translate_text("Mediscope AI – Your Health Assistant", current_lang)
