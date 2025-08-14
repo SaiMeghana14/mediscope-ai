@@ -42,6 +42,8 @@ if "username" not in st.session_state:
     st.session_state.username = None
 if "login_expiry" not in st.session_state:
     st.session_state.login_expiry = None
+if "user_mode" not in st.session_state:  # store doctor/patient mode
+    st.session_state.user_mode = "Patient"
 
 # ---------------------------
 # Auto-logout if session expired
@@ -151,4 +153,5 @@ else:
 
 # ---------------------------
 # Mode switch
-mode = st.sidebar.radio("Choose mode:", ["Doctor", "Patient"])
+mode = st.sidebar.radio("Choose mode:", ["Doctor", "Patient"], index=0 if st.session_state.user_mode == "Doctor" else 1)
+st.session_state.user_mode = mode  # Save mode persistently
