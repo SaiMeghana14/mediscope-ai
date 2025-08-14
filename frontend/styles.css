@@ -25,7 +25,8 @@ p.subtitle {
 }
 
 div.info-box {
-    background: #c98064;
+    background: #0b1f44;
+    color: orange;       
     padding: 20px;
     border-radius: 12px;
     border-left: 5px solid #38bdf8;
