@@ -9,6 +9,11 @@ import uuid
 
 # Create OpenAI client using API key from Streamlit secrets
 client = OpenAI(api_key=st.secrets["openai_api_key"])
+response = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+print(response.choices[0].message)
 
 def show_chatbot():
     st.markdown("<h2 style='color:#00f4c1;'>🧠 AI Diagnosis Assistant</h2>", unsafe_allow_html=True)
