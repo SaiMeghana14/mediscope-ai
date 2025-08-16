@@ -6,16 +6,21 @@ from streamlit_mic_recorder import mic_recorder
 from translate_module import translate_text
 from LanguageSelector import get_lang_code
 import uuid
+import traceback   # ✅ added for better error logging
 
 # Create OpenAI client using API key from Streamlit secrets
 client = OpenAI(api_key=st.secrets["openai_api_key"])
 
 # Test call (demo)
-response = client.chat.completions.create(
-    model="gpt-4o-mini",
-    messages=[{"role": "user", "content": "Hello!"}]
-)
-print(response.choices[0].message.content)   # ✅ fixed
+try:
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": "Hello!"}]
+    )
+    print(response.choices[0].message.content)   # ✅ fixed
+except Exception as e:
+    print("❌ OpenAI test call failed:", e)
+    traceback.print_exc()
 
 def show_chatbot():
     st.markdown("<h2 style='color:#00f4c1;'>🧠 AI Diagnosis Assistant</h2>", unsafe_allow_html=True)
@@ -56,8 +61,10 @@ def show_chatbot():
             )
             user_input = transcript.text
             st.success(f"🎧 You said: {user_input}")
-        except Exception:
-            st.error("Voice transcription failed.")
+        except Exception as e:
+            st.error("⚠️ Voice transcription failed.")
+            st.sidebar.error(f"Transcription error: {e}")   # ✅ extra logging
+            traceback.print_exc()
 
     # Fallback text input
     typed_input = st.chat_input("Type your medical question here...")
@@ -110,14 +117,17 @@ def show_chatbot():
                         tts_audio = BytesIO()
                         tts.write_to_fp(tts_audio)
                         st.audio(tts_audio.getvalue(), format="audio/mp3")
-                    except Exception:
-                        pass
+                    except Exception as tts_err:
+                        st.sidebar.warning(f"TTS error: {tts_err}")   # ✅ logging for TTS
+                        traceback.print_exc()
 
             # Save reply
             st.session_state.messages.append({"role": "assistant", "content": reply_final})
 
         except Exception as e:
             st.error("⚠️ OpenAI API error: Please try again later.")
+            st.sidebar.error(f"OpenAI error: {e}")   # ✅ detailed log in sidebar
+            traceback.print_exc()
             st.session_state.messages.append({
                 "role": "assistant",
                 "content": "⚠️ Sorry, I couldn't respond due to a technical error."
