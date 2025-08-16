@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit as st 
 from openai import OpenAI
 from gtts import gTTS
 from io import BytesIO
@@ -9,11 +9,13 @@ import uuid
 
 # Create OpenAI client using API key from Streamlit secrets
 client = OpenAI(api_key=st.secrets["openai_api_key"])
+
+# Test call (demo)
 response = client.chat.completions.create(
     model="gpt-4o-mini",
     messages=[{"role": "user", "content": "Hello!"}]
 )
-print(response.choices[0].message)
+print(response.choices[0].message.content)   # ✅ fixed
 
 def show_chatbot():
     st.markdown("<h2 style='color:#00f4c1;'>🧠 AI Diagnosis Assistant</h2>", unsafe_allow_html=True)
@@ -95,7 +97,7 @@ def show_chatbot():
                         temperature=0.5,
                         max_tokens=600
                     )
-                    reply_en = response.choices[0].message.content.strip()
+                    reply_en = response.choices[0].message.content.strip()   # ✅ fixed
 
                     # Translate response if needed
                     reply_final = translate_text(reply_en, target_lang) if target_lang != "en" else reply_en
