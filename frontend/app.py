@@ -1,6 +1,8 @@
-import sys
 import os
-sys.path.append(os.path.dirname(__file__))
+import openai
+import sys
+print("✅ OpenAI version:", openai.__version__)
+print("✅ Python path:", sys.path)
 
 import streamlit as st
 from Home import show_home
