@@ -16,5 +16,5 @@ torch
 gTTS
 fpdf2>=2.7.8
 python-dotenv
-openai
+openai<1.0.0
 bcrypt
